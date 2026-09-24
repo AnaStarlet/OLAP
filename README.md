@@ -1,37 +1,30 @@
 # OLAP-проект
 
-**ФИО:** Сакович Анастасия, Потапчик Анастасия, Журавская Полина
-**Группа:** СДП-ИИ-231
-**Домен:** онлайн-продажи электроники
+**ФИО:** Сакович Анастасия, Потапчик Анастасия, Журавская Полина  
+**Группа:** СДП-ИИ-231  
+**Домен:** Розничная торговля — продуктовый магазин
 
 ## Как поднять ClickHouse
 
 Из корня проекта:
 
-```bash
-docker compose up -d
-chmod +x scripts/init_ch.sh
-./scripts/init_ch.sh
-curl http://localhost:8123/ping     # → Ok.
-```
+    docker compose up -d
+    chmod +x scripts/init_ch.sh
+    ./scripts/init_ch.sh
+    curl http://localhost:8123/ping     # → Ok.
 
 ## Порты
 
 | Сервис | Порт |
-|---|---|
+|--------|------|
 | ClickHouse | 8123 |
 | ClickHouse | 9000 |
 | Metabase | 3000 |
 
 ## Сырьё
 
-Папка `data/raw/`:
-
-| Файл | Поля |
-|---|---|
-| dim_customer.csv | customer_id, customer_name, city, segment |
-| dim_product.csv | product_id, product_name, category, brand |
-| dim_date.csv | date_id, full_date, year, month, month_name, day_of_week |
-| fact_orders.csv | order_id, date_id, customer_id, product_id, qty, amount |
-
----
+| Файл | Строк | Поля |
+|------|-------|------|
+| `dim_product.csv` | 25 000 | product_id, product_name, category, brand, unit, price, supplier_id |
+| `dim_customer.csv` | 25 000 | customer_id, full_name, gender, age, city, loyalty_card, register_date |
+| `fact_sales.csv` | 25 000 | sale_id, sale_datetime, customer_id, product_id, quantity, unit_price, total_amount, payment_type, store_id |
