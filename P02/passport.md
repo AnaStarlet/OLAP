@@ -1,13 +1,8 @@
----
-aliases:
-  - паспорт_витрины
----
-
 # Паспорт витрины (P02 / зачёт)
 
 **ФИО:** Сакович Анастасия, Потапчик Анастасия, Журавская Полина  
 **Группа:** СДП-ИИ-231  
-**Дата:** 01.10.2026    
+**Дата:** 01.10.2026  
 **Домен:** Розничная торговля — продуктовый магазин
 
 ---
@@ -49,8 +44,8 @@ aliases:
 |-----|------|-----------------|-------------------|
 | `dim_product` | `product_id` | `product_name`, `category`, `brand`, `unit`, `price`, `supplier_id` | SCD2 по `category`, `brand`, `price` — история важна для анализа. |
 | `dim_store` | `store_id` | `store_name`, `region`, `city`, `address` | SCD1 — адрес/название можно затирать. |
-| `dim_customer` | `customer_id` | `customer_name`, `segment`, `region` | SCD1 — сегмент/регион затираем. |
-| `dim_date` | `date_key` / `sale_datetime` | `date`, `month`, `quarter`, `year`, `weekday` | нет — генерируется из даты. |
+| `dim_customer` | `customer_id` | `full_name`, `gender`, `age`, `city`, `loyalty_card`, `register_date` | SCD1 — город/статус лояльности затираем. |
+| `dim_date` | `date_key` | `date`, `month`, `quarter`, `year`, `weekday` | нет — генерируется из даты. |
 | `dim_payment` | `payment_type` | `payment_type` | нет — справочник способов оплаты. |
 
 ---
@@ -65,8 +60,14 @@ aliases:
 
 ## 7. Эталонный SQL одной метрики (черновик → уточнить на P04)
 
+**Главная метрика: оборот без возвратов.**
+
 ```sql
--- Главная метрика: оборот без возвратов (в сырье возвратов нет, поэтому = SUM(total_amount))
+-- Главная метрика: оборот без возвратов
+SELECT SUM(total_amount) AS revenue
+FROM fact_sales;
+
+-- Пример разреза: оборот по месяцам за 2024 год
 SELECT
     d.year,
     d.month,
@@ -74,7 +75,6 @@ SELECT
 FROM fact_sales f
 JOIN dim_date d ON d.date_key = CAST(f.sale_datetime AS DATE)
 WHERE d.year = 2024
-  AND d.month = 1
 GROUP BY d.year, d.month
 ORDER BY d.year, d.month;
 ```
@@ -83,8 +83,8 @@ ORDER BY d.year, d.month;
 
 ## 8. Риски / cut
 
-- **Нет возвратов** — в `fact_sales.csv` нет признака возврата, поэтому «оборот без возвратов» = обычный оборот.
-- **Нет справочника магазинов** — `store_id` есть, но `dim_store` в сырье отсутствует, нужно создать.
-- **Нет справочника клиентов** — `customer_id` есть, но `dim_customer` нет, нужно создать.
+- **Возвратов нет в сырье** — в `fact_sales.csv` нет признака `is_return`, поэтому «оборот без возвратов» совпадает с обычным оборотом.
+- **Справочник `dim_store` отсутствует** — `store_id` есть в факте, но атрибутов магазина нет; нужно создать.
+- **Справочники `dim_product` и `dim_customer` есть в сырье** — требуют очистки и приведения типов.
 - **SCD2 по товарам** — в сырье только текущее состояние `dim_product`, для истории нужна отдельная таблица с `valid_from` / `valid_to`.
 - **ClickHouse / Kafka / ML** — не делаем, выносим в cut с описанием, чем это грозит отчётам.
