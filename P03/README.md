@@ -60,13 +60,13 @@ python load_data.py *>&1 | Tee-Object -FilePath checks.txt
 
 ## О таблицах
 
-| Таблица | Источник | Строк |
+| Таблица | Источник |
 |---------|----------|-------|
-| `dim_customer` | `P01/data/raw/dim_customer.csv` | 25 000 |
-| `dim_product`  | `P01/data/raw/dim_product.csv`  | 25 000 |
-| `dim_store`    | `P03/data/dim_store.csv`        | 10 |
-| `dim_date`     | генерируется из `fact_sales.sale_datetime` | 366 |
-| `dim_payment`  | генерируется из `fact_sales.payment_type`  | 3 |
-| `fact_sales`   | `P01/data/raw/fact_sales.csv`   | 25 000 |
+| `dim_customer` | `P01/data/raw/dim_customer.csv` |
+| `dim_product`  | `P01/data/raw/dim_product.csv` |
+| `dim_store`    | `P03/data/dim_store.csv` |
+| `dim_date`     | генерируется из `fact_sales.sale_datetime`|
+| `dim_payment`  | генерируется из `fact_sales.payment_type` |
+| `fact_sales`   | `P01/data/raw/fact_sales.csv` |
 
 Grain факта: **одна строка = одна позиция в чеке** (`sale_id` + `product_id`).
