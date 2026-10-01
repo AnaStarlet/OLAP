@@ -4,15 +4,17 @@
 
 ```
 OLAP/
-├── P01/data/raw/
+├── P01/data/raw/               # исходное сырьё
 │   ├── dim_customer.csv
 │   ├── dim_product.csv
 │   └── fact_sales.csv
 └── P03/
+    ├── data/
+    │   └── dim_store.csv       # справочник магазинов
     ├── sql/ddl_duckdb.sql
     ├── load_data.py
-    ├── checks.txt          # сохранённый вывод проверок
-    └── warehouse.duckdb    # создаётся скриптом, не коммитим
+    ├── checks.txt              # сохранённый вывод проверок
+    └── warehouse.duckdb        # создаётся скриптом, не коммитим
 ```
 
 ## Как загрузить
@@ -33,8 +35,9 @@ python load_data.py
 
 - создаёт таблицы из `sql/ddl_duckdb.sql`;
 - очищает таблицы (`DELETE FROM`) — повторный запуск не удваивает данные;
-- грузит CSV из `P01/data/raw/` в `dim_customer`, `dim_product`, `fact_sales`;
-- заполняет `dim_date` и `dim_payment`;
+- грузит `dim_customer.csv` и `dim_product.csv` из `P01/data/raw/`;
+- грузит `dim_store.csv` из `P03/data/`
+- грузит `fact_sales.csv`, попутно заполняя `dim_date` и `dim_payment`;
 - печатает проверки (строки, пустые ключи, суммы).
 
 **Весь вывод скрипта — на английском (ASCII).** Это сделано специально,
@@ -54,3 +57,16 @@ python load_data.py *>&1 | Tee-Object -FilePath checks.txt
 `python load_data.py` можно запускать сколько угодно раз.
 Скрипт каждый раз делает `DELETE FROM` по таблицам и грузит CSV заново —
 **данные не удваиваются**.
+
+## О таблицах
+
+| Таблица | Источник | Строк |
+|---------|----------|-------|
+| `dim_customer` | `P01/data/raw/dim_customer.csv` | 25 000 |
+| `dim_product`  | `P01/data/raw/dim_product.csv`  | 25 000 |
+| `dim_store`    | `P03/data/dim_store.csv`        | 10 |
+| `dim_date`     | генерируется из `fact_sales.sale_datetime` | 366 |
+| `dim_payment`  | генерируется из `fact_sales.payment_type`  | 3 |
+| `fact_sales`   | `P01/data/raw/fact_sales.csv`   | 25 000 |
+
+Grain факта: **одна строка = одна позиция в чеке** (`sale_id` + `product_id`).
