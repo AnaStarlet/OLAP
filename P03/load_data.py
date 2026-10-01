@@ -24,6 +24,7 @@ DDL_FILE = os.path.join(HERE, "sql", "ddl_duckdb.sql")
 CUSTOMER_CSV = os.path.join(RAW_DIR, "dim_customer.csv")
 PRODUCT_CSV = os.path.join(RAW_DIR, "dim_product.csv")
 FACT_CSV = os.path.join(RAW_DIR, "fact_sales.csv")
+STORE_CSV = os.path.join(HERE, "data", "dim_store.csv")
 
 
 def apply_ddl(con):
@@ -96,6 +97,25 @@ def load_products(con):
         "INSERT INTO dim_product (product_id, product_name, category, brand, unit, price, supplier_id) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)", rows)
     print(f"[OK] dim_product: {len(rows)} rows, skipped {skipped} broken.")
+    return len(rows)
+
+
+def load_stores(con):
+    if not os.path.exists(STORE_CSV):
+        print(f"[WARN] Missing {STORE_CSV} - skipped.")
+        return 0
+    with open(STORE_CSV, "r", encoding="utf-8-sig") as f:
+        r = csv.reader(f)
+        next(r)  # header
+        rows = []
+        for row in r:
+            if not row:
+                continue
+            rows.append((int(row[0]), row[1], row[2], row[3], row[4]))
+    con.executemany(
+        "INSERT INTO dim_store (store_id, store_name, region, city, address) "
+        "VALUES (?, ?, ?, ?, ?)", rows)
+    print(f"[OK] dim_store: {len(rows)} rows.")
     return len(rows)
 
 
@@ -221,6 +241,7 @@ def main():
     clear_tables(con)
     load_customers(con)
     load_products(con)
+    load_stores(con)
     load_facts(con)
     run_checks(con)
     con.close()
