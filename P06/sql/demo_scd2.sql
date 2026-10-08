@@ -1,4 +1,5 @@
 ﻿-- P06. SCD2 demo: change category for one product.
+-- Product product_id = 1: was "Серьги", moved to "Пирсинг".
 
 -- Step 1: initial versions of 5 products.
 INSERT INTO dim_product_scd2
@@ -16,20 +17,19 @@ SELECT
 FROM dim_product
 LIMIT 5;
 
--- Step 2: change category for product_id = 1.
--- 2a. Close old version.
+-- Step 2: close old version of product_id = 1.
 UPDATE dim_product_scd2
 SET valid_to   = DATE '2024-02-01',
     is_current = FALSE
 WHERE product_id = 1
   AND is_current = TRUE;
 
--- 2b. Insert new version.
+-- Step 3: insert new version with category "Пирсинг".
 INSERT INTO dim_product_scd2
 SELECT
     product_id,
     product_name,
-    'NEW_CATEGORY' AS category,
+    'Пирсинг' AS category,
     subcategory,
     material,
     retail_price,
@@ -40,7 +40,7 @@ SELECT
 FROM dim_product
 WHERE product_id = 1;
 
--- Step 3: show TWO versions of product_id = 1.
+-- Step 4: show TWO versions of product_id = 1.
 SELECT
     product_id,
     category,
