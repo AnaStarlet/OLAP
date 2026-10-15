@@ -1,4 +1,8 @@
-﻿"""Create tables in ClickHouse by sending one statement at a time."""
+﻿"""P07 v2. Create tables in ClickHouse from sql/ddl_clickhouse.sql.
+
+Splits DDL by semicolons and executes one statement at a time.
+Re-run safe: uses IF NOT EXISTS.
+"""
 import re
 from pathlib import Path
 from clickhouse_driver import Client
@@ -12,8 +16,8 @@ DDL_FILE = Path("sql/ddl_clickhouse.sql")
 
 
 def split_sql(sql: str):
-    """Split SQL by semicolons, ignore comments and empty lines."""
-    sql = re.sub(r"--[^\n]*", "", sql)  # strip line comments
+    """Split SQL by semicolons, drop comments and empty lines."""
+    sql = re.sub(r"--[^\n]*", "", sql)
     parts = [p.strip() for p in sql.split(";")]
     return [p for p in parts if p]
 

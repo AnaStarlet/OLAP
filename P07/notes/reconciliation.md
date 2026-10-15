@@ -2,12 +2,14 @@
 
 ## Метод
 
-Для каждой из 13 таблиц сравнили `count(*)` в обеих базах.
-Для главной метрики сравнили `sum(total_amount)` по `fact_sales`.
+- Источник: `P03/data/raw/*.csv` (одни и те же файлы).
+- DuckDB: файл `P03/warehouse.duckdb`, обычные MergeTree-таблицы.
+- ClickHouse: база `olap`, движок ReplacingMergeTree.
+- Для ClickHouse используется `FINAL` — он схлопывает версии строк и считает уникальные.
 
 ## Count по таблицам
 
-| Таблица | DuckDB | ClickHouse | Совпадает |
+| Таблица | DuckDB | ClickHouse (FINAL) | Совпадает |
 |---|---|---|---|
 | dim_store | 30 | 30 | да |
 | dim_warehouse | 6 | 6 | да |
@@ -25,19 +27,28 @@
 
 ## Главная метрика
 
-Файл: `sql/canonical_metric.sql`, запрос: `SELECT SUM(total_amount) FROM fact_sales`.
+Запрос: `SELECT SUM(total_amount) FROM fact_sales` (в ClickHouse — с `FINAL`).
 
 | База | Значение |
 |---|---|
 | DuckDB | 3 557 661 372.99 |
 | ClickHouse | 3 557 661 372.99 |
 
-Совпадает до копейки. Расхождений нет.
+Совпадает до копейки.
 
 ## Повторная загрузка
 
-`etl/load_all.py` перед каждой таблицей выполняет `TRUNCATE TABLE olap.{table}`,
-затем заливает CSV заново. Поэтому повторный запуск не удваивает данные.
+Загрузка инкрементальная, без `TRUNCATE`. Просто `INSERT`.
+Дедупликация делается движком `ReplacingMergeTree` по ключу сортировки:
 
-Проверено двумя прогонами подряд — лог в `notes/load_log.txt`.
-`fact_sales` в обоих прогонах = 100 000 строк, метрика не меняется.
+- `fact_sales` — `sale_id`
+- `fact_visits` — `visit_id`
+- `fact_interest` — `interest_id`
+- `fact_loyalty` — `loyalty_id`
+- `fact_logistics` — `shipment_id`
+- `fact_inventory` — `inventory_id`
+- все `dim_*` — по своему id.
+
+Доказательство: загрузка запущена **дважды подряд**. После второго прогона:
+- `count(*) FINAL` = 100 000, не 200 000
+- `sum(total_amount) FINAL` = 3 557 661 372.99, не изменилась.
