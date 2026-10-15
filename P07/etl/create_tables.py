@@ -1,8 +1,4 @@
-﻿"""P07 v2. Create tables in ClickHouse from sql/ddl_clickhouse.sql.
-
-Splits DDL by semicolons and executes one statement at a time.
-Re-run safe: uses IF NOT EXISTS.
-"""
+﻿"""P07"""
 import re
 from pathlib import Path
 from clickhouse_driver import Client
